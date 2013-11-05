@@ -1,4 +1,4 @@
-protolus-resource.js
+protolus-resource.php
 ===========
 
 A Node.js resource layer for dynamic bundling of npm modules and embedded resources(such as js, css, images, less...) supporting dependencies. 
@@ -81,4 +81,4 @@ Additionally all js in package.resources are executed in a global scope, the way
 
 Enjoy,
 
--Abbey Hawk Sparrow
+-The Protolus team
