@@ -7,22 +7,22 @@ Server Side
 -----------
 First require the module:
 
-    var Resource = require('protolus-resource');
+    require('Protolus_Resource');
     
 Next you'll need a registry to keep track of all the modules that get unrolled:
 
-    var register = new Resource.Registry();
+    $registry = new Protolus_Registry();
     
 Then, to actually register a resource:
 
-    Resource.import('my_npm_module', registry, function(resource){
+    Protolus_Resource::import('my_npm_module', $registry, function($resource){
         //all done
     });
 
 once you've done this you can access all the included resources, with or without dependencies
 
-    var resourceList = Resource.includes(registry, [excludes], [callback]);
-    var fullResourceList = Resource.explicit(registry, [excludes], [callback]);
+    $resourceList = Protolus_Resource::includes($registry, [excludes], [callback]);
+    $fullResourceList = Protolus_Resource::explicit($registry, [excludes], [callback]);
     
 you'll need this to generate your own URL back to fetch the right resource bundle, each filetype can be requested from from it's own endpoint, for example to request the js files from the 'my_npm_module' npm module I would use:
 
@@ -36,22 +36,19 @@ or I can get an array of head tags, after resources are registered, using `Resou
 - *combined* : are the resources a series of sequential tags or one large combined one?
 - *compact* : are the resources built uncompressed, or are they minified/compacted/etc. ?
 
-        Resource.head(true, function(tags){
-            res.end('<html><head>'+(tags.join("\n"))+'</head><body><h1>Heya!</h1></body></html>');
+        Protolus_Resource::head(true, function($tags){
+            $res->end('<html><head>'.($tags.join("\n")).'</head><body><h1>Heya!</h1></body></html>');
         });
 
 On the other side of things, in your server, theres a passthrough for handling the serving of all these resources which we can use to put it all together:
 
-    var app = require('http').createServer(function handler(req, res) {
-        Resource.handle(req, res, function(){
-            Resource.import('test-component', registry, function(){
-                Resource.head(true, function(tags){
-                    res.end('<html><head>'+(tags.join("\n"))+'</head><body><h1>Heya!</h1></body></html>');
-                }); 
-            });
+    Protolus_Resource::handle($req, $res, function(){
+        Protolus_Resource::import('test-component', $registry, function(){
+            Protolus_Resource::head(true, function($tags){
+                $res->end('<html><head>'.($tags.join("\n")).'</head><body><h1>Heya!</h1></body></html>');
+            }); 
         });
     });
-    app.listen(80);
     
 Then we can get combined payloads into the browser without committing to a build process or async loading every required module, individually.
 
