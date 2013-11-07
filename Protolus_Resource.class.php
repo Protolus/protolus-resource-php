@@ -2,24 +2,38 @@
     class Protolus_Resource{
         public static $packages = array();
         public static $handlers = array();
+        public static $combined = false;
         
-        public static function head($callback){
-            foreach(Protolus_Resource::$packages as $name, $resource){
-                
+        public static function head($type, $callback){
+            foreach(Protolus_Resource::$packages as $name => $package){
+                $files = $package->files($type, $includeDependencies);
+                if(Protolus_Resource::$combined){
+                    $list = implode($files, "-");
+                    $result = '<script src="/'.$type.'/'.$list.'" protolus="'.$list.'"></script>';
+                }else{
+                    $files = array_map(function($name){
+                        $name = str_replace('\/\/\/', '/', str_replace(getcwd(), '', $name));
+                        return '<script src="/'.$type.'/'.$name.'"></script>';
+                    }, $files);
+                    echo('fdkfdfj : '.print_r($files, true));
+                    $result = implode("\n", $files);
+                }
             }
+            $callback($result);
         }
         
         public static function handle($request, $response, $callback){
             
         }
         
-        public static function require($component){
+        public static function reqyre($component){
             Protolus_Resource::$packages[$component] = new Protolus_Resource($component);
+            Protolus_Resource::$packages[$component]->package(true);
         }
         
         protected $dependencies = array();
         
-        public function __construct($name, $options){
+        public function __construct($name, $options = array()){
             $this->name = $name;
             if(!$options) $options = array();
         }
@@ -29,8 +43,53 @@
             return $result;
         }
         
-        public function output($includeDependencies){
-            
+        public function files($type, $includeDependencies){
+            $results = array();
+            if(strtolower($type) == 'js' && $this->contents->main) $results[] = getcwd().'/'.$this->contents->main;
+            if($includeDependencies){
+                foreach($this->contents->dependencies as $name => $version){
+                    $dependency = $this->packages[$name]?$this->packages[$name]:new Protolus_Resource($name);
+                    $results = array_merge($results, $dependency->files($type, $includeDependencies));
+                }
+                foreach($this->contents->optionalDependencies as $name => $version){
+                    $dependency = $this->packages[$name]?$this->packages[$name]:new Protolus_Resource($name);
+                    $results = array_merge($results, $dependency->files($type, $includeDependencies));
+                }
+            }
+            foreach($this->contents->resources as $index => $name){
+                $results[] = getcwd().'/'.$name;
+            }
+            return $results;
+        }
+        
+        public function html($type, $includeDependencies){
+            $files = $this->files($type, $includeDependencies);
+            if(Protolus_Resource::$combined){
+                $list = implode($files, "-");
+                return '<script src="/'.$type.'/'.$list.'" protolus="'.$list.'"></script>';
+            }else{
+                array_map(function($name){
+                    return '<script src="/'.$type.'/'.$name.'"></script>';
+                }, $files);
+                return implode($files, "\n");
+            }
+        }
+        
+        public function body($type, $includeDependencies){
+            $result = '';
+            if(strtolower($type) == 'js'){
+                
+            }
+            if($includeDependencies){
+                foreach($this->contents->dependencies as $name => $version){
+                    $dependency = $this->packages[$name]?$this->packages[$name]:new Protolus_Resource($name);
+                    $result .= $dependency->output($type, $includeDependencies);
+                }
+                foreach($this->contents->optionalDependencies as $name => $version){
+                    $dependency = $this->packages[$name]?$this->packages[$name]:new Protolus_Resource($name);
+                    $result .= $dependency->output($type, $includeDependencies);
+                }
+            }
         }
         
         public function package($includeDependencies){
@@ -39,7 +98,7 @@
                 $manifest = file_get_contents($this->path.'package.json');
                 $data = json_decode($manifest);
                 $this->contents = $data;
-            }catch($ex){
+            }catch(Exception $ex){
                 if(file_exists('./node_modules/'.$this->name.'.js')){
                     $this->contents = array();
                     $this->contents->name = $this->name;
@@ -52,11 +111,11 @@
             if(!$this->contents->resources) $this->contents->resources = array();
             if($includeDependencies){
                 foreach($this->contents->dependencies as $name => $version){
-                    Protolus_Resource::require($name);
+                    Protolus_Resource::reqyre($name);
                     $this->dependencies[$name] = $version;
                 }
                 foreach($this->contents->optionalDependencies as $name => $version){
-                    Protolus_Resource::require($name);
+                    Protolus_Resource::reqyre($name);
                     $this->dependencies[$name] = $version;
                 }
             }
