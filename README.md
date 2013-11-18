@@ -52,9 +52,9 @@ On the other side of things, in your server, theres a passthrough for handling t
     
 Then we can get combined payloads into the browser without committing to a build process or async loading every required module, individually.
 
-Currently supported are: scss, less, css, javascript and coffeescript
+Currently supported are: less, css, and js
 
-    require('protolus-resource/handler-<type>');
+    Protolus_Resource::enable('<type>');
 
 Client Side
 -----------
@@ -69,11 +69,15 @@ This simply initializes Protolus, this function is called implicitly by Protolus
     
 This function preregisters a block of code to some module name for later requiring
 
-    Protolus.require(<name>, [<callback>]);
+    Protolus.require(<name>);
     
 which you will likely want to take over 'require', unless you are using 2 loaders (which is, to be fair, probably crazy).
 
     window.require = Protolus.require;
+    
+and if you want the require function to deliver empty objects when a library is missing:
+
+    Protolus.silent = true;
     
 This gives us a require shim that supports both the CommonJS and (eventually) AMD style of declaration because we can guarantee module load in the head so at runtime everything is there... no need for anything synchronous or incompatible.
 

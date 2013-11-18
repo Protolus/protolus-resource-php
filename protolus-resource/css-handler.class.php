@@ -1,11 +1,11 @@
 <?php
-    class Protolus_Javascript_Handler{
+    class Protolus_Stylesheet_Handler{
         
         public function __construct(){
         }
         
         public function html($name){
-            return '<script src="/js/'.$name.'" protolus="'.$name.'"></script>';
+            return '<link href="/css/'.$name.'" rel="stylesheet" protolus="'.$name.'"/>';
         }
         
         public function body($files, $options=null){
@@ -23,4 +23,4 @@
         
     }
     
-    Protolus_Resource::$handlers['css'] = new Protolus_Javascript_Handler();
+    Protolus_Resource::$handlers['css'] = new Protolus_Stylesheet_Handler();
